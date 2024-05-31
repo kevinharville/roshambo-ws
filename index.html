@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://kit.fontawesome.com/8a60413eaf.js" crossorigin="anonymous"></script>
+    <link href="/assets/css/fontawesome.css" rel="stylesheet" />
+    <link href="/assets/css/kevin.css" rel="stylesheet" />
+    <!-- <link href="/kevin.css" rel="stylesheet" />
+    <link href="/fontawesome.css" rel="stylesheet" />
+    <link href="/assets/css/css/brands.css" rel="stylesheet" />
+    <link href="/assets/css/css/solid.css" rel="stylesheet" />
+    <link href="/assets/css/custom-icons.css" rel="stylesheet" />
+    <link href="/assets/css/sharp-solid.css" rel="stylesheet" /> -->
+    <title>Rock, Paper, Scissors</title>
+
+
+</head>
+
+<body>
+    <h1>Rock, Paper, Scissors</h1>
+    <h3 id="who"></h3>
+    <div id="status">Waiting for opponent...</div>
+    <hr />
+    <div id="buttons" class="flex-grid">
+        <div id="rock" disabled><i class="fa-solid fa-hand-back-fist fa-2xl"></i></div>
+        <div id="paper" disabled><i class="fa-solid fa-hand-paper fa-2xl"></i></div>
+        <div id="scissors" disabled><i class="fa-solid fa-hand-scissors fa-2xl"></i></div>
+    </div>
+
+    <div id="results" class="grid-container">
+        <div>
+            <i id="player1hand" class="fa-solid fa-circle-question"></i>
+        </div>
+
+        <div>
+            <i id="player2hand" class="fa-solid fa-circle-question"></i>
+
+        </div>
+        <div class="player-name">PLAYER 1</div>
+        <div class="player-name">PLAYER 2</div>
+    </div>
+
+    <button id="playAgain" style="display: none;">Play Again</button>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:3000');
+        let playerId;
+
+        ws.onmessage = (event) => {
+            console.log("event onmessage")
+            const data = JSON.parse(event.data);
+            if (data.playerId) {
+                console.log("data:")
+                console.log(data)
+                console.log("---------")
+                playerId = data.playerId;
+                document.getElementById('status').innerText = `You are Player ${playerId}`;
+                document.getElementById('rock').removeAttribute('disabled');
+                document.getElementById('paper').removeAttribute('disabled');
+                document.getElementById('scissors').removeAttribute('disabled');
+                document.getElementById('who').innerText = `Player: ${playerId}`;
+                enableButtons(true);
+            } else if (data.result) {
+                document.getElementById('status').innerText = data.result;
+                enableButtons(false);
+                document.getElementById('playAgain').style.display = 'block';
+            }
+        };
+
+        document.getElementById('rock').addEventListener('click', () => {
+            sendChoice('rock');
+            //addClass('rock', 'go','fa-hand-back-fist');
+            setGo('rock','fa-hand-back-fist');
+            //addClass('player1hand', "fa-hand-back-fist");
+        });
+
+        document.getElementById('paper').addEventListener('click', () => {
+            sendChoice('paper');
+            //addClass('paper', 'go');
+            setGo('paper', 'fa-hand-paper');
+            //addClass('player1hand', "fa-hand-paper");
+        });
+
+        document.getElementById('scissors').addEventListener('click', () => {
+            sendChoice('scissors');
+            //addClass('scissors', 'go');
+            setGo('scissors','fa-hand-scissors');
+            //addClass('player1hand', "fa-hand-scissors");
+        });
+
+        document.getElementById('playAgain').addEventListener('click', () => {
+            playAgain();
+        });
+
+        function setGo(elementId, className){
+            console.log(playerId)
+            
+            var choices=['rock','paper','scissors'];
+            for (choice in choices){
+                var elm = document.getElementById(choices[choice]);
+                elm.classList.remove('go');
+            }
+            var elem = document.getElementById(elementId);
+            console.log("HEY:")
+            elem.classList.add('go');
+            console.log(elem)
+          
+            console.log("YOU:")
+
+            // var element = document.getElementById(elementId);//duplicate
+            var playerHand = document.getElementById("player" + playerId + "hand");
+            playerHand.classList.remove("fa-circle-question");
+            var classes = ['fa-hand-back-fist','fa-hand-paper','fa-hand-scissors'];
+            var elm = document.getElementById("player" + playerId + "hand");
+            for (cls in classes){    
+                elm.classList.remove(classes[cls]);
+            }
+            console.log("array:")
+            console.log(elm)
+            elm.classList.add(className);
+            console.log(elm)
+            //addClass(elementId, 'go')
+           // if (elem) {
+                //elem.classList.add(className);
+            //}
+        }
+
+        function sendChoice(choice) {
+            console.log(choice)
+            ws.send(JSON.stringify({ type: 'choice', choice }));
+            enableButtons(false);
+        }
+
+        function addClass(elementId, className) {
+ 
+            console.log("taking care of " + elementId);
+            const element = document.getElementById(elementId);
+            var playerHand = document.getElementById("player" + playerId + "hand");
+            playerHand.classList.remove("fa-circle-question");
+            if (element) {
+                element.classList.add(className);
+            }
+        }
+
+        function playAgain() {
+            ws.send(JSON.stringify({ type: 'playAgain' }));
+            document.getElementById('status').innerText = 'Waiting for opponent...';
+            document.getElementById('playAgain').style.display = 'none';
+            enableButtons(true);
+        }
+
+        function enableButtons(enable) {
+            document.getElementById('rock').disabled = !enable;
+            document.getElementById('paper').disabled = !enable;
+            document.getElementById('scissors').disabled = !enable;
+        }
+    </script>
+</body>
+
+</html>

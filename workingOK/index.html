@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock, Paper, Scissors</title>
+</head>
+<body>
+    <h1>Rock, Paper, Scissors</h1>
+    <div id="status">Waiting for opponent...</div>
+    <div id="buttons">
+        <button id="rock" disabled>Rock</button>
+        <button id="paper" disabled>Paper</button>
+        <button id="scissors" disabled>Scissors</button>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:3000');
+        let playerId;
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.playerId) {
+                playerId = data.playerId;
+                document.getElementById('status').innerText = `You are Player ${playerId}`;
+                document.getElementById('rock').removeAttribute('disabled');
+                document.getElementById('paper').removeAttribute('disabled');
+                document.getElementById('scissors').removeAttribute('disabled');
+            } else if (data.result) {
+                document.getElementById('status').innerText = data.result;
+                document.getElementById('buttons').style.display = 'none';
+            }
+        };
+
+        document.getElementById('rock').addEventListener('click', () => sendChoice('rock'));
+        document.getElementById('paper').addEventListener('click', () => sendChoice('paper'));
+        document.getElementById('scissors').addEventListener('click', () => sendChoice('scissors'));
+
+        function sendChoice(choice) {
+            ws.send(JSON.stringify({ playerId, choice }));
+            document.getElementById('rock').setAttribute('disabled', 'disabled');
+            document.getElementById('paper').setAttribute('disabled', 'disabled');
+            document.getElementById('scissors').setAttribute('disabled', 'disabled');
+        }
+    </script>
+</body>
+</html>
